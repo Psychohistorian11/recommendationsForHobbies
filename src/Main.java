@@ -8,97 +8,98 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+    private static final String apiKey = "AIzaSyA-dg5_nxz03QMOcCgRuXuQdCd3iAkNmDU";
+    private static final String nickname_user1 = "cristianf";
+    private static final String password_user1 = "abcd1234";
+
     public static void main(String[] args) {
-        // Lista de hobbies
         Scanner scanner = new Scanner(System.in);
         List<String> hobbies = new ArrayList<>();
         List<String> pasatiempo = new ArrayList<>();
-        String nickname_user1 = "cristianf";
-        String password_user1 = "abcd1234";
+
         while (true) {
             System.out.println("LOGIN BOOKING");
             System.out.println("---------------------------------");
-            System.out.println("Ingrese su usuario: ");
+            System.out.println("Enter your username: ");
             String user = scanner.nextLine();
-            System.out.println("Ingrese su contraseña: ");
+            System.out.println("Enter your password: ");
             String password = scanner.nextLine();
 
             if (user.equals(nickname_user1) && password.equals(password_user1)) {
                 while (true) {
                     System.out.println("BOOKING MENU");
                     System.out.println("---------------------------------");
-                    System.out.println("1. Ingresar hobbies");
-                    System.out.println("2. Ver recomendaciones segun mis hobbies");
+                    System.out.println("1. Enter hobbies");
+                    System.out.println("2. View recommendations based on my hobbies");
                     int opcion = scanner.nextInt();
                     scanner.nextLine();
                     if (opcion == 1) {
-                        while (true) {
-                            System.out.println("---------------------------------");
-                            System.out.print("Ingresa tus Hobbies: ");
-                            String hobby = scanner.nextLine();
-                            System.out.println("Presione la letra 's' en caso de que no tenga más hobbies");
-
-                            // Verificar si se presiona la tecla 'q' para salir
-                            if (hobby.equalsIgnoreCase("s")) {
-                                break;
-                            }
-                            hobbies.add(hobby);
-                        }
-
+                        enterHobbies(scanner, hobbies);
                     } else if (opcion == 2) {
-                        if (hobbies.isEmpty()) {
-                            System.out.println("No has ingresado hobbies");
-                        } else {
-                            System.out.println("Que lugares quieres que te muestre según tus hobbies:");
-                            System.out.println("Tus hobbies:");
-                            int contador = 1;
-                            for (String hobbie : hobbies) {
-                                System.out.println(contador + "." + hobbie);
-                                contador = contador + 1;
-                            }
-                            pasatiempo = new ArrayList<>();
-                            while (true) {
-                                int indice = scanner.nextInt();
-                                if (indice == 0) {
-                                    break;
-                                } else {
-                                    if (pasatiempo.contains(hobbies.get(indice - 1))){
-                                        System.out.println("[WARNING] Ya lo seleccionaste anteriormente, intenta con otro");
-                                    }
-                                    else{
-                                        pasatiempo.add(hobbies.get(indice - 1));
-                                    }
-
-                                    System.out.println("En caso de no agregar mas pulse '0'");
-                                }
-                            }
-                            String apiKey = "AIzaSyA-dg5_nxz03QMOcCgRuXuQdCd3iAkNmDU";
-                            double[] userLocation = getLocation();
-                            searchPlacesForHobbies(userLocation[0], userLocation[1], apiKey, pasatiempo);
-                            //scanner.close();
-                        }
-
+                        viewRecommendations(scanner, hobbies, pasatiempo);
                     } else {
-                        System.out.println("Comando Invalido");
+                        System.out.println("Invalid Command");
                     }
-
                 }
             } else {
-                System.out.println("El usuario no existe");
+                System.out.println("User does not exist");
             }
         }
+    }
 
+    private static void enterHobbies(Scanner scanner, List<String> hobbies) {
+        while (true) {
+            System.out.println("---------------------------------");
+            System.out.print("Enter your hobbies: ");
+            String hobby = scanner.nextLine();
+            System.out.println("Press 's' if you don't have more hobbies");
+
+            if (hobby.equalsIgnoreCase("s")) {
+                break;
+            }
+            hobbies.add(hobby);
+        }
+    }
+
+    private static void viewRecommendations(Scanner scanner, List<String> hobbies, List<String> pasatiempo) {
+        if (hobbies.isEmpty()) {
+            System.out.println("You haven't entered any hobbies");
+        } else {
+            System.out.println("What places do you want to see according to your hobbies:");
+            System.out.println("Your hobbies:");
+            int contador = 1;
+            for (String hobbie : hobbies) {
+                System.out.println(contador + "." + hobbie);
+                contador++;
+            }
+            pasatiempo = new ArrayList<>();
+            while (true) {
+                int indice = scanner.nextInt();
+                if (indice == 0) {
+                    break;
+                } else {
+                    if (pasatiempo.contains(hobbies.get(indice - 1))){
+                        System.out.println("[WARNING] You already selected this one before, try another one");
+                    }
+                    else{
+                        pasatiempo.add(hobbies.get(indice - 1));
+                    }
+
+                    System.out.println("If you want to add more press '0'");
+                }
+            }
+            double[] userLocation = getLocation();
+            searchPlacesForHobbies(userLocation[0], userLocation[1], pasatiempo);
+        }
     }
 
     public static double[] getLocation() {
-        // Crea un cliente HTTP
         OkHttpClient client = new OkHttpClient();
-
-        // Construye la solicitud para obtener la ubicación
         Request request = new Request.Builder()
                 .url("https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA-dg5_nxz03QMOcCgRuXuQdCd3iAkNmDU")
                 .post(okhttp3.RequestBody.create(null, new byte[0]))
@@ -106,60 +107,43 @@ public class Main {
 
         try {
             double[] userLocation = {0.0, 0.0};
-
             Response response = client.newCall(request).execute();
             String responseData = response.body().string();
-
             JSONObject jsonObject = new JSONObject(responseData);
             JSONObject location = jsonObject.getJSONObject("location");
-            double latitud = location.getDouble("lat");
-            double longitud = location.getDouble("lng");
-
-            System.out.println("Latitud: " + latitud);
-            System.out.println("Longitud: " + longitud);
-
-            userLocation[0] = latitud;
-            userLocation[1] = longitud;
-
+            double latitude = location.getDouble("lat");
+            double longitude = location.getDouble("lng");
+            userLocation[0] = latitude;
+            userLocation[1] = longitude;
             return userLocation;
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return new double[0];
     }
 
-    public static void searchPlacesForHobbies(double lat, double lng, String apiKey, List<String> hobbies) {
-        // Inicializar el cliente de Google Places
+    public static void searchPlacesForHobbies(double lat, double lng, List<String> hobbies) {
         GeoApiContext context = new GeoApiContext.Builder()
                 .apiKey(apiKey)
                 .build();
 
-        // Iterar sobre cada hobby y buscar lugares cercanos
         for (String hobby : hobbies) {
-            // Crear una solicitud de lugares cercanos con filtro de palabra clave
             NearbySearchRequest request = PlacesApi.nearbySearchQuery(context, new LatLng(lat, lng))
                     .keyword(hobby);
-
-            request.radius(1000);
-
+            request.radius(5000);
             try {
-                // Realizar la solicitud y obtener los resultados
                 PlacesSearchResponse response = request.await();
-
-                System.out.println("Resultados para el hobby: " + hobby);
+                System.out.println("Results for the hobby: " + hobby);
                 System.out.println("---------------------------------");
 
-                for (PlacesSearchResult result : response.results) {
-                    System.out.println("Nombre: " + result.name);
-                    System.out.println("Dirección: " + result.vicinity);
+                Arrays.stream(response.results).forEach(result -> {
+                    System.out.println("Name: " + result.name);
+                    System.out.println("Address: " + result.vicinity);
                     System.out.println("------------------------");
-                }
+                });
             } catch (ApiException | InterruptedException | IOException e) {
                 e.printStackTrace();
             }
-
             System.out.println();
         }
     }
