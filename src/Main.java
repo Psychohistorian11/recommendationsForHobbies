@@ -79,20 +79,28 @@ public class Main {
             }
             pasatiempo = new ArrayList<>();
             while (true) {
-                int indice = scanner.nextInt();
-                if (indice == 0) {
-                    break;
+                if (scanner.hasNextInt()) {
+                    int indice = scanner.nextInt();
+                    if (indice == 0) {
+                        break;
+                    } else {
+                        if (indice > 0 && indice <= hobbies.size()) {
+                            if (pasatiempo.contains(hobbies.get(indice - 1))) {
+                                System.out.println("[WARNING] You already selected this one before, try another one");
+                            } else {
+                                pasatiempo.add(hobbies.get(indice - 1));
+                            }
+                            System.out.println("If you don't want to add more press '0'");
+                        } else {
+                            System.out.println("Invalid index");
+                        }
+                    }
                 } else {
-                    if (pasatiempo.contains(hobbies.get(indice - 1))){
-                        System.out.println("[WARNING] You already selected this one before, try another one");
-                    }
-                    else{
-                        pasatiempo.add(hobbies.get(indice - 1));
-                    }
-
-                    System.out.println("If you want to add more press '0'");
+                    System.out.println("Please enter a valid integer");
+                    scanner.next(); // Clear invalid input
                 }
             }
+
             double[] userLocation = getLocation();
             searchPlacesForHobbies(userLocation[0], userLocation[1], pasatiempo);
         }
@@ -115,6 +123,9 @@ public class Main {
             double longitude = location.getDouble("lng");
             userLocation[0] = latitude;
             userLocation[1] = longitude;
+            System.out.println(latitude);
+            System.out.println(longitude);
+
             return userLocation;
         } catch (Exception e) {
             e.printStackTrace();
@@ -130,7 +141,7 @@ public class Main {
         for (String hobby : hobbies) {
             NearbySearchRequest request = PlacesApi.nearbySearchQuery(context, new LatLng(lat, lng))
                     .keyword(hobby);
-            request.radius(5000);
+            request.radius(1000);
             try {
                 PlacesSearchResponse response = request.await();
                 System.out.println("Results for the hobby: " + hobby);
